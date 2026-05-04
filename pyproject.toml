@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-elicitation-proxy"
+version = "0.1.0"
+description = "FastMCP proxy server with tool-call elicitation middleware"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastmcp>=3.2,<4",
+  "pydantic>=2",
+  "pyyaml",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "pytest-asyncio",
+  "ruff",
+]
+
+[project.scripts]
+mcp-elicitation-proxy = "mcp_elicitation_proxy.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_elicitation_proxy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
