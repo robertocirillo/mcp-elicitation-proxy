@@ -32,7 +32,7 @@ uv sync
 ## Test
 
 ```bash
-uv run pytest
+uv run pytest -q
 ```
 
 Optional lint:
@@ -40,6 +40,15 @@ Optional lint:
 ```bash
 uv run ruff check .
 ```
+
+## Build
+
+```bash
+uv build
+```
+
+Build artifacts are local release outputs under `dist/` and are not intended to
+be committed.
 
 ## Configuration
 
@@ -227,3 +236,6 @@ Explicitly out of scope for this slice:
 The proxy performs real form-mode elicitation for non-sensitive missing required
 fields when enabled. Required fields that appear to be credentials or secrets are
 blocked with a structured `tool_call_blocked` result instead of being elicited.
+
+This `0.1.0` baseline is intended as an internal/preliminary release. No package
+license is declared yet; choose one before publishing outside internal channels.
