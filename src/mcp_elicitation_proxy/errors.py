@@ -55,6 +55,12 @@ def to_json_message(payload: StructuredToolErrorPayload) -> str:
 def _reason_for(result: InspectionResult) -> str:
     if result.status == InspectionStatus.NEEDS_ELICITATION:
         return "required_fields_missing_or_empty"
+    if result.status == InspectionStatus.REJECT:
+        reasons = {issue.reason for issue in result.issues if issue.reason}
+        if len(reasons) == 1:
+            return next(iter(reasons))
+        if reasons:
+            return "policy_rejected"
     return result.status.value
 
 

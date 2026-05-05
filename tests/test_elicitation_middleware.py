@@ -11,6 +11,9 @@ from fastmcp.tools.base import ToolResult
 from mcp_elicitation_proxy.middleware import ElicitationMiddleware
 from mcp_elicitation_proxy.pipeline import ElicitationPipeline
 from mcp_elicitation_proxy.policies.schema_required import SchemaRequiredPolicy
+from mcp_elicitation_proxy.policies.sensitive_required import (
+    SensitiveRequiredFieldPolicy,
+)
 from tests.conftest import _call_result_data
 
 
@@ -95,7 +98,14 @@ def _schema(required: list[str]) -> dict[str, Any]:
 
 
 def _middleware() -> ElicitationMiddleware:
-    return ElicitationMiddleware(ElicitationPipeline([SchemaRequiredPolicy()]))
+    return ElicitationMiddleware(
+        ElicitationPipeline(
+            [
+                SensitiveRequiredFieldPolicy(),
+                SchemaRequiredPolicy(),
+            ]
+        )
+    )
 
 
 def _context(
@@ -188,6 +198,85 @@ async def test_middleware_elicits_missing_fields_and_forwards_updated_arguments(
     assert original_arguments == {"ticket_id": "OPS-123"}
     assert forwarded_arguments == {"ticket_id": "OPS-123", "project": "ops"}
     assert forwarded_arguments is not original_arguments
+
+
+async def test_middleware_does_not_elicit_missing_api_key() -> None:
+    middleware = _middleware()
+    fastmcp_context = _FastMCPContext(
+        {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "api_key": {"type": "string"},
+            },
+            "required": ["query", "api_key"],
+        },
+        elicit_response=_ElicitResponse(data={"api_key": "secret"}),
+    )
+    call_next_calls = 0
+
+    async def call_next(
+        context: MiddlewareContext[mt.CallToolRequestParams],
+    ) -> ToolResult:
+        nonlocal call_next_calls
+        call_next_calls += 1
+        return ToolResult(structured_content={"forwarded": context.message.name})
+
+    result = await middleware.on_call_tool(
+        _context("sync_repository", {"query": "release notes"}, fastmcp_context),
+        call_next,
+    )
+
+    payload = _call_result_data(result)
+    assert call_next_calls == 0
+    assert fastmcp_context.elicit_calls == 0
+    assert payload == {
+        "error": "tool_call_blocked",
+        "tool": "sync_repository",
+        "status": "reject",
+        "reason": "sensitive_required_field",
+        "missing_or_ambiguous": ["api_key"],
+        "message": (
+            "Tool call blocked because form-mode elicitation cannot request "
+            "sensitive required field 'api_key'."
+        ),
+    }
+
+
+async def test_middleware_does_not_forward_missing_access_token() -> None:
+    middleware = _middleware()
+    fastmcp_context = _FastMCPContext(
+        {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string"},
+                "access_token": {"type": "string"},
+            },
+            "required": ["resource", "access_token"],
+        }
+    )
+    call_next_calls = 0
+
+    async def call_next(
+        context: MiddlewareContext[mt.CallToolRequestParams],
+    ) -> ToolResult:
+        nonlocal call_next_calls
+        call_next_calls += 1
+        return ToolResult(structured_content={"forwarded": context.message.name})
+
+    result = await middleware.on_call_tool(
+        _context("fetch_secure_resource", {"resource": "report"}, fastmcp_context),
+        call_next,
+    )
+
+    payload = _call_result_data(result)
+    assert call_next_calls == 0
+    assert fastmcp_context.elicit_calls == 0
+    assert payload["error"] == "tool_call_blocked"
+    assert payload["tool"] == "fetch_secure_resource"
+    assert payload["status"] == "reject"
+    assert payload["reason"] == "sensitive_required_field"
+    assert payload["missing_or_ambiguous"] == ["access_token"]
 
 
 async def test_middleware_forwards_complete_generic_tool_call() -> None:

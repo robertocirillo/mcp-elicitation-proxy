@@ -9,7 +9,8 @@ In this first slice the project provides:
 - an installable `src/` package;
 - YAML configuration loading;
 - a thin server factory around FastMCP native proxying;
-- placeholders for elicitation middleware, policies, and request building;
+- elicitation middleware, policies, and request building for missing required fields;
+- a guard that blocks form-mode elicitation for required fields that look sensitive;
 - tests that verify real discovery and tool-call forwarding through the proxy.
 
 ## Architecture
@@ -17,7 +18,7 @@ In this first slice the project provides:
 - Upstream discovery is delegated to FastMCP native proxying via `fastmcp.server.create_proxy(...)`.
 - No local generic tool is registered.
 - No manual redefinition of upstream tool schemas is performed.
-- Elicitation middleware is intentionally deferred to later tasks.
+- Elicitation logic lives in middleware/policies and does not replace native discovery or forwarding.
 
 FastMCP's current recommended API is `fastmcp.server.create_proxy(...)`, so this project uses that directly.
 
@@ -65,4 +66,4 @@ You can also provide the config path via `MCP_ELICITATION_PROXY_CONFIG`.
 
 ## Status
 
-The elicitation middleware is not implemented yet. This slice only establishes the proxy skeleton, policy interfaces, structured error payloads, and test harness needed for the next tasks.
+The proxy performs real form-mode elicitation for non-sensitive missing required fields. Required fields that appear to be credentials or secrets are blocked with a structured `tool_call_blocked` result instead of being elicited.

@@ -9,13 +9,21 @@ from .logging import configure_logging
 from .middleware import ElicitationMiddleware
 from .pipeline import ElicitationPipeline
 from .policies.schema_required import SchemaRequiredPolicy
+from .policies.sensitive_required import SensitiveRequiredFieldPolicy
 from .upstream import create_upstream_proxy
 
 
 def build_server(config: AppConfig) -> Any:
     server = create_upstream_proxy(config)
     server.add_middleware(
-        ElicitationMiddleware(ElicitationPipeline([SchemaRequiredPolicy()]))
+        ElicitationMiddleware(
+            ElicitationPipeline(
+                [
+                    SensitiveRequiredFieldPolicy(),
+                    SchemaRequiredPolicy(),
+                ]
+            )
+        )
     )
     return server
 
