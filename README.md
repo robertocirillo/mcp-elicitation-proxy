@@ -193,6 +193,35 @@ uv run mcp-elicitation-proxy --config config.yaml
 
 You can also provide the config path via `MCP_ELICITATION_PROXY_CONFIG`.
 
+## First slice milestone status
+
+The first slice is complete for:
+
+- starting a standalone FastMCP proxy server;
+- configuring a single upstream server;
+- preserving native upstream tool discovery;
+- applying middleware only on tool calls;
+- enforcing required-field policies from upstream schema and config;
+- blocking required fields that look sensitive before elicitation;
+- eliciting missing non-sensitive required fields when the client supports it;
+- forwarding the completed call upstream after accepted elicitation;
+- returning structured errors when elicitation is unavailable, disabled,
+  declined, cancelled, or fails;
+- automated tests for discovery, forwarding, elicitation behavior, config, and
+  structured error payload stability.
+
+Explicitly out of scope for this slice:
+
+- multi-upstream routing;
+- UI;
+- LLM-based policies;
+- complex auth;
+- rate limiting;
+- persistence;
+- advanced observability;
+- real confirmation policy behavior;
+- advanced ambiguity policy behavior.
+
 ## Status
 
 The proxy performs real form-mode elicitation for non-sensitive missing required
