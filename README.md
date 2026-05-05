@@ -116,6 +116,54 @@ The proxy does not modify `tools/list`. Tool name, description, and input schema
 remain the upstream values unless an explicit future discovery feature changes
 that contract.
 
+`elicitation.enabled` controls whether the middleware may call the client's
+MCP elicitation capability:
+
+- `enabled: true` means missing non-sensitive required fields are requested with
+  `ctx.elicit(...)`, then merged into the original arguments before forwarding
+  upstream.
+- `enabled: false` means the middleware never calls `ctx.elicit(...)`. If input
+  is incomplete, it returns a structured result and does not call the upstream
+  tool.
+
+Only one unsupported-client fallback is implemented in this slice:
+`fallback_on_unsupported: "structured_error"`. If the client does not support
+elicitation, declines, cancels, or elicitation fails, the proxy returns a
+structured result similar to:
+
+```json
+{
+  "error": "elicitation_required",
+  "tool": "search_docs",
+  "status": "needs_elicitation",
+  "reason": "elicitation_unsupported",
+  "missing_or_ambiguous": ["project"],
+  "message": "Input incompleto. Richiama il tool specificando i campi mancanti."
+}
+```
+
+Clients or models that receive this result should call the same tool again with
+complete input.
+
+`tools.<tool_name>.elicit.message` customizes the prompt sent to the client for
+that tool. `tools.<tool_name>.elicit.fields` customizes primitive flat field
+metadata used in the elicitation form:
+
+```yaml
+tools:
+  search_docs:
+    elicit:
+      message: "In quale progetto devo cercare?"
+      fields:
+        project:
+          type: string
+          description: "Progetto o scope in cui cercare"
+```
+
+Only fields present in the active `needs_elicitation` issues are included in the
+elicitation request. Extra configured field metadata does not alter discovery or
+the upstream schema.
+
 Policy order is:
 
 1. `sensitive_required`
@@ -124,9 +172,9 @@ Policy order is:
 This blocks missing or empty sensitive required fields before normal required
 field elicitation can request them.
 
-`ambiguous_if`, `confirm_if`, and detailed `elicit` settings are parsed for
-forward-compatible configuration, but advanced ambiguity, confirmation, and
-LLM-based policies are not implemented in this slice.
+`ambiguous_if` and `confirm_if` settings are parsed for forward-compatible
+configuration, but advanced ambiguity, confirmation, and LLM-based policies are
+not implemented in this slice.
 
 Structured rejection reason behavior: if all reject issues have the same
 `reason`, the error payload keeps that reason. If future reject policies produce
@@ -147,4 +195,6 @@ You can also provide the config path via `MCP_ELICITATION_PROXY_CONFIG`.
 
 ## Status
 
-The proxy performs real form-mode elicitation for non-sensitive missing required fields. Required fields that appear to be credentials or secrets are blocked with a structured `tool_call_blocked` result instead of being elicited.
+The proxy performs real form-mode elicitation for non-sensitive missing required
+fields when enabled. Required fields that appear to be credentials or secrets are
+blocked with a structured `tool_call_blocked` result instead of being elicited.

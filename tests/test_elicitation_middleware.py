@@ -149,12 +149,12 @@ async def test_middleware_blocks_incomplete_generic_tool_call_without_call_next(
     payload = _call_result_data(result)
     assert call_next_calls == 0
     assert fastmcp_context.elicit_calls == 0
-    assert payload["error"] == "tool_call_blocked"
+    assert payload["error"] == "elicitation_required"
     assert payload["tool"] == "lookup_ticket"
     assert payload["status"] == "needs_elicitation"
-    assert payload["reason"] == "required_fields_missing_or_empty"
+    assert payload["reason"] == "elicitation_unsupported"
     assert payload["missing_or_ambiguous"] == ["project"]
-    assert "project" in payload["message"]
+    assert payload["message"]
 
 
 async def test_middleware_elicits_missing_fields_and_forwards_updated_arguments() -> None:
@@ -334,7 +334,7 @@ async def test_middleware_does_not_block_when_schema_is_unavailable() -> None:
 @pytest.mark.parametrize(
     ("response", "expected_status"),
     [
-        (_ElicitResponse(action="decline"), "elicitation_rejected"),
+        (_ElicitResponse(action="decline"), "elicitation_declined"),
         (_ElicitResponse(action="cancel"), "elicitation_cancelled"),
         (None, "elicitation_failed"),
     ],
@@ -365,9 +365,9 @@ async def test_middleware_does_not_forward_when_elicitation_is_not_accepted(
     payload = _call_result_data(result)
     assert call_next_calls == 0
     assert fastmcp_context.elicit_calls == 1
-    assert payload["error"] == "tool_call_blocked"
+    assert payload["error"] == "elicitation_required"
     assert payload["tool"] == "lookup_ticket"
-    assert payload["status"] == expected_status
+    assert payload["status"] == "needs_elicitation"
     assert payload["reason"] == expected_status
     assert payload["missing_or_ambiguous"] == ["project"]
     assert payload["message"]
@@ -396,9 +396,9 @@ async def test_middleware_does_not_forward_when_elicitation_raises() -> None:
     payload = _call_result_data(result)
     assert call_next_calls == 0
     assert fastmcp_context.elicit_calls == 1
-    assert payload["error"] == "tool_call_blocked"
+    assert payload["error"] == "elicitation_required"
     assert payload["tool"] == "lookup_ticket"
-    assert payload["status"] == "elicitation_failed"
+    assert payload["status"] == "needs_elicitation"
     assert payload["reason"] == "elicitation_failed"
     assert payload["missing_or_ambiguous"] == ["project"]
     assert payload["message"]

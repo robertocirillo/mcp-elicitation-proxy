@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError
@@ -16,7 +17,7 @@ class ProxyConfig(BaseModel):
 
 class ElicitationConfig(BaseModel):
     enabled: bool = True
-    fallback_on_unsupported: str = "structured_error"
+    fallback_on_unsupported: Literal["structured_error"] = "structured_error"
 
 
 class SchemaRequiredPolicyConfig(BaseModel):

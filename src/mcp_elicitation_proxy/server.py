@@ -13,7 +13,13 @@ from .upstream import create_upstream_proxy
 
 def build_server(config: AppConfig) -> Any:
     server = create_upstream_proxy(config)
-    server.add_middleware(ElicitationMiddleware(build_pipeline(config)))
+    server.add_middleware(
+        ElicitationMiddleware(
+            build_pipeline(config),
+            elicitation=config.elicitation,
+            tool_configs=config.tools,
+        )
+    )
     return server
 
 

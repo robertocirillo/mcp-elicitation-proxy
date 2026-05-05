@@ -34,17 +34,18 @@ def build_tool_call_blocked_payload(
 def build_elicitation_blocked_payload(
     tool_name: str,
     *,
-    status: str,
+    reason: str,
     fields: list[str],
-    message: str,
+    message: str | None = None,
 ) -> StructuredToolErrorPayload:
     return StructuredToolErrorPayload(
-        error="tool_call_blocked",
+        error="elicitation_required",
         tool=tool_name,
-        status=status,
-        reason=status,
+        status=InspectionStatus.NEEDS_ELICITATION.value,
+        reason=reason,
         missing_or_ambiguous=fields,
-        message=message,
+        message=message
+        or "Input incompleto. Richiama il tool specificando i campi mancanti.",
     )
 
 

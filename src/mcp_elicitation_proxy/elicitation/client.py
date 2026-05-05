@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class ElicitationOutcomeStatus(StrEnum):
     ACCEPTED = "accepted"
     UNAVAILABLE = "unavailable"
-    DECLINED = "elicitation_rejected"
+    DECLINED = "elicitation_declined"
     CANCELLED = "elicitation_cancelled"
     FAILED = "elicitation_failed"
 

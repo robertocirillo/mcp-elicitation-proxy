@@ -55,12 +55,12 @@ async def test_lookup_ticket_incomplete_input_returns_structured_fallback(
     )
 
     payload = _call_result_data(result)
-    assert payload["error"] == "tool_call_blocked"
+    assert payload["error"] == "elicitation_required"
     assert payload["tool"] == "lookup_ticket"
     assert payload["status"] == "needs_elicitation"
-    assert payload["reason"] == "required_fields_missing_or_empty"
+    assert payload["reason"] == "elicitation_unsupported"
     assert payload["missing_or_ambiguous"] == ["project"]
-    assert "project" in payload["message"]
+    assert payload["message"]
 
 
 async def test_lookup_ticket_incomplete_input_uses_real_elicitation(
