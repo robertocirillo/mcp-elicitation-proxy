@@ -52,7 +52,7 @@ be committed.
 
 ## Configuration
 
-Example `config.yaml`:
+Example `config.yaml` with an HTTP upstream:
 
 ```yaml
 upstream:
@@ -115,6 +115,37 @@ tools:
     elicit:
       message: "Confermi di voler eliminare questo elemento?"
 ```
+
+Example `config.yaml` with a command-based upstream:
+
+```yaml
+upstream:
+  command: "npx"
+  args:
+    - -y
+    - "@modelcontextprotocol/server-everything"
+
+proxy:
+  name: "mcp-elicitation-proxy"
+```
+
+`upstream.url` and `upstream.command` are mutually exclusive. Exactly one must
+be configured. `upstream.args` defaults to an empty list and is valid only with
+`upstream.command`. Command-based upstreams may also provide string environment
+variables:
+
+```yaml
+upstream:
+  command: "uvx"
+  args:
+    - "some-mcp-server"
+  env:
+    SOME_KEY: "some-value"
+```
+
+Both upstream forms are passed to FastMCP `create_proxy(...)`. Discovery remains
+native: the proxy delegates upstream `tools/list` and does not register a
+generic forwarding tool.
 
 `schema_required` uses native upstream JSON Schema `required` fields. Per-tool
 `tools.<tool_name>.required` fields are added at runtime for `tools/call`
