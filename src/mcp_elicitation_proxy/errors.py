@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 class StructuredToolErrorPayload(BaseModel):
     error: str
     tool: str
+    status: str
     reason: str
     missing_or_ambiguous: list[str] = Field(default_factory=list)
     message: str

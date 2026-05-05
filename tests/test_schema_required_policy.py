@@ -122,6 +122,16 @@ async def test_detects_empty_list_and_empty_dict() -> None:
     ]
 
 
+async def test_does_not_treat_non_empty_list_or_dict_as_empty() -> None:
+    result = await _inspect(
+        {"tags": ["release"], "metadata": {"owner": "docs"}},
+        _schema(required=["tags", "metadata"]),
+    )
+
+    assert result.status == InspectionStatus.OK
+    assert result.issues == []
+
+
 async def test_does_not_treat_false_or_zero_as_empty() -> None:
     result = await _inspect(
         {"include_archived": False, "limit": 0},
@@ -148,3 +158,11 @@ async def test_returns_ok_when_required_is_not_a_list() -> None:
 
     assert result.status == InspectionStatus.OK
     assert result.issues == []
+
+
+async def test_does_not_mutate_arguments() -> None:
+    arguments = {"query": "api auth flow"}
+
+    await _inspect(arguments, _schema(required=["query", "project"]))
+
+    assert arguments == {"query": "api auth flow"}

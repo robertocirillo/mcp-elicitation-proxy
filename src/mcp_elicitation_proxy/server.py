@@ -6,12 +6,17 @@ from typing import Any
 
 from .config import AppConfig, load_config
 from .logging import configure_logging
+from .middleware import ElicitationMiddleware
+from .pipeline import ElicitationPipeline
+from .policies.schema_required import SchemaRequiredPolicy
 from .upstream import create_upstream_proxy
 
 
 def build_server(config: AppConfig) -> Any:
     server = create_upstream_proxy(config)
-    # Elicitation middleware will be attached here in a later slice.
+    server.add_middleware(
+        ElicitationMiddleware(ElicitationPipeline([SchemaRequiredPolicy()]))
+    )
     return server
 
 
