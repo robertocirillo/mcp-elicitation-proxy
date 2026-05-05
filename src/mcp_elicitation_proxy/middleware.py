@@ -8,7 +8,17 @@ import mcp.types as mt
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools.base import ToolResult
 
-from .errors import build_tool_call_blocked_payload, to_json_message
+from .elicitation.client import (
+    ElicitationOutcomeStatus,
+    merge_elicited_values,
+    request_missing_values,
+)
+from .errors import (
+    StructuredToolErrorPayload,
+    build_elicitation_blocked_payload,
+    build_tool_call_blocked_payload,
+    to_json_message,
+)
 from .pipeline import ElicitationPipeline
 from .policies.base import InspectionResult, InspectionStatus
 
@@ -37,15 +47,52 @@ class ElicitationMiddleware(Middleware):
         )
 
         if result.status == InspectionStatus.OK:
-            if result.updated_arguments is None:
-                return await call_next(context)
+            return await self._forward_tool_call(context, call_next, result)
 
-            message = context.message.model_copy(
-                update={"arguments": dict(result.updated_arguments)}
+        if result.status != InspectionStatus.NEEDS_ELICITATION:
+            return self._fallback_result(tool_name, result)
+
+        elicitation = await request_missing_values(
+            context.fastmcp_context,
+            tool_name,
+            result.issues,
+            tool_schema,
+        )
+        if elicitation.status == ElicitationOutcomeStatus.UNAVAILABLE:
+            return self._fallback_result(tool_name, result)
+
+        if elicitation.status != ElicitationOutcomeStatus.ACCEPTED:
+            return self._fallback_payload_result(
+                build_elicitation_blocked_payload(
+                    tool_name,
+                    status=elicitation.status.value,
+                    fields=elicitation.fields,
+                    message=elicitation.message
+                    or "Elicitation did not provide required values.",
+                )
             )
-            return await call_next(context.copy(message=message))
 
-        return self._fallback_result(tool_name, result)
+        updated_arguments = merge_elicited_values(
+            arguments,
+            elicitation.values or {},
+            elicitation.fields,
+        )
+        updated_result = await self.inspect_tool_call(
+            tool_name=tool_name,
+            arguments=updated_arguments,
+            tool_schema=tool_schema,
+            context=context.fastmcp_context,
+        )
+        if updated_result.status == InspectionStatus.OK:
+            if updated_result.updated_arguments is not None:
+                updated_arguments = dict(updated_result.updated_arguments)
+            return await self._forward_tool_call(
+                context,
+                call_next,
+                InspectionResult.ok(updated_arguments=updated_arguments),
+            )
+
+        return self._fallback_result(tool_name, updated_result)
 
     async def inspect_tool_call(
         self,
@@ -91,7 +138,27 @@ class ElicitationMiddleware(Middleware):
         result: InspectionResult,
     ) -> ToolResult:
         payload = build_tool_call_blocked_payload(tool_name, result)
+        return self._fallback_payload_result(payload)
+
+    def _fallback_payload_result(
+        self,
+        payload: StructuredToolErrorPayload,
+    ) -> ToolResult:
         return ToolResult(
             content=to_json_message(payload),
             structured_content=payload.model_dump(),
         )
+
+    async def _forward_tool_call(
+        self,
+        context: MiddlewareContext[mt.CallToolRequestParams],
+        call_next: CallNext[mt.CallToolRequestParams, ToolResult],
+        result: InspectionResult,
+    ) -> ToolResult:
+        if result.updated_arguments is None:
+            return await call_next(context)
+
+        message = context.message.model_copy(
+            update={"arguments": dict(result.updated_arguments)}
+        )
+        return await call_next(context.copy(message=message))

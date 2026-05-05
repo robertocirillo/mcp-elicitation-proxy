@@ -31,6 +31,23 @@ def build_tool_call_blocked_payload(
     )
 
 
+def build_elicitation_blocked_payload(
+    tool_name: str,
+    *,
+    status: str,
+    fields: list[str],
+    message: str,
+) -> StructuredToolErrorPayload:
+    return StructuredToolErrorPayload(
+        error="tool_call_blocked",
+        tool=tool_name,
+        status=status,
+        reason=status,
+        missing_or_ambiguous=fields,
+        message=message,
+    )
+
+
 def to_json_message(payload: StructuredToolErrorPayload) -> str:
     return json.dumps(payload.model_dump())
 
