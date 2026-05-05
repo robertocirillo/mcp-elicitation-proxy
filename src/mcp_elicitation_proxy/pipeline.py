@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
+from .config import AppConfig
 from .policies.base import InspectionResult, InspectionStatus, ToolElicitationPolicy
+from .policies.schema_required import SchemaRequiredPolicy
+from .policies.sensitive_required import SensitiveRequiredFieldPolicy
 
 
 class ElicitationPipeline:
@@ -30,3 +33,32 @@ class ElicitationPipeline:
         if changed:
             return InspectionResult.ok(updated_arguments=current_arguments)
         return InspectionResult.ok()
+
+
+def build_pipeline(config: AppConfig) -> ElicitationPipeline:
+    policies: list[ToolElicitationPolicy] = []
+    tool_required_fields = {
+        tool_name: tool_config.required
+        for tool_name, tool_config in config.tools.items()
+        if tool_config.required
+    }
+
+    if config.policies.sensitive_required.enabled:
+        policies.append(
+            SensitiveRequiredFieldPolicy(
+                tool_required_fields=tool_required_fields,
+                sensitive_name_markers=(
+                    config.policies.sensitive_required.sensitive_name_markers
+                ),
+                sensitive_schema_markers=(
+                    config.policies.sensitive_required.sensitive_schema_markers
+                ),
+            )
+        )
+
+    if config.policies.schema_required.enabled:
+        policies.append(
+            SchemaRequiredPolicy(tool_required_fields=tool_required_fields)
+        )
+
+    return ElicitationPipeline(policies)

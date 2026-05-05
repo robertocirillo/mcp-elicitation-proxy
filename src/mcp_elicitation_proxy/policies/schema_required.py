@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from .base import InspectionIssue, InspectionResult
+from .required_fields import combined_required_fields
 
 
 def _is_empty_required_value(value: Any) -> bool:
@@ -16,6 +18,15 @@ def _is_empty_required_value(value: Any) -> bool:
 
 
 class SchemaRequiredPolicy:
+    def __init__(
+        self,
+        tool_required_fields: Mapping[str, Sequence[str]] | None = None,
+    ) -> None:
+        self._tool_required_fields = {
+            tool_name: list(required_fields)
+            for tool_name, required_fields in (tool_required_fields or {}).items()
+        }
+
     async def inspect(
         self,
         tool_name: str,
@@ -23,18 +34,14 @@ class SchemaRequiredPolicy:
         tool_schema: dict[str, Any] | None,
         context: Any,
     ) -> InspectionResult:
-        if tool_schema is None:
-            return InspectionResult.ok()
-
-        required_fields = tool_schema.get("required")
-        if not isinstance(required_fields, list):
+        required_fields = combined_required_fields(
+            tool_name, tool_schema, self._tool_required_fields
+        )
+        if not required_fields:
             return InspectionResult.ok()
 
         issues: list[InspectionIssue] = []
         for field in required_fields:
-            if not isinstance(field, str):
-                continue
-
             if field not in arguments:
                 issues.append(
                     InspectionIssue(
