@@ -118,6 +118,34 @@ def test_rejects_args_without_command(tmp_path: Path) -> None:
         )
 
 
+@pytest.mark.parametrize("url", ["", "   "])
+def test_rejects_blank_url(tmp_path: Path, url: str) -> None:
+    with pytest.raises(ValueError, match="upstream.url must not be blank"):
+        load_config(
+            _write_config(
+                tmp_path,
+                f"""
+                upstream:
+                  url: {url!r}
+                """,
+            )
+        )
+
+
+@pytest.mark.parametrize("command", ["", "   "])
+def test_rejects_blank_command(tmp_path: Path, command: str) -> None:
+    with pytest.raises(ValueError, match="upstream.command must not be blank"):
+        load_config(
+            _write_config(
+                tmp_path,
+                f"""
+                upstream:
+                  command: {command!r}
+                """,
+            )
+        )
+
+
 def test_loads_tool_required_fields(tmp_path: Path) -> None:
     config = load_config(
         _write_config(

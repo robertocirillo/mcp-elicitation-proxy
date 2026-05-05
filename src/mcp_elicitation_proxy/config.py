@@ -17,6 +17,10 @@ class UpstreamConfig(BaseModel):
     def validate_target(self) -> Self:
         if (self.url is None) == (self.command is None):
             raise ValueError("upstream must specify exactly one of 'url' or 'command'")
+        if self.url is not None and not self.url.strip():
+            raise ValueError("upstream.url must not be blank")
+        if self.command is not None and not self.command.strip():
+            raise ValueError("upstream.command must not be blank")
         if self.command is None and self.args:
             raise ValueError("upstream.args requires upstream.command")
         if self.command is None and self.env:
