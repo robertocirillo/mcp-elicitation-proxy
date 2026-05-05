@@ -1,14 +1,31 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 
 import yaml
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 
 class UpstreamConfig(BaseModel):
-    url: str
+    url: str | None = None
+    command: str | None = None
+    args: list[str] = Field(default_factory=list)
+    env: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_target(self) -> Self:
+        if (self.url is None) == (self.command is None):
+            raise ValueError("upstream must specify exactly one of 'url' or 'command'")
+        if self.url is not None and not self.url.strip():
+            raise ValueError("upstream.url must not be blank")
+        if self.command is not None and not self.command.strip():
+            raise ValueError("upstream.command must not be blank")
+        if self.command is None and self.args:
+            raise ValueError("upstream.args requires upstream.command")
+        if self.command is None and self.env:
+            raise ValueError("upstream.env requires upstream.command")
+        return self
 
 
 class ProxyConfig(BaseModel):
