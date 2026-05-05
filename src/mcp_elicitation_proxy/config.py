@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, ValidationError
@@ -16,13 +17,60 @@ class ProxyConfig(BaseModel):
 
 class ElicitationConfig(BaseModel):
     enabled: bool = True
-    fallback_on_unsupported: str = "structured_error"
+    fallback_on_unsupported: Literal["structured_error"] = "structured_error"
+
+
+class SchemaRequiredPolicyConfig(BaseModel):
+    enabled: bool = True
+
+
+class SensitiveRequiredPolicyConfig(BaseModel):
+    enabled: bool = True
+    sensitive_name_markers: list[str] | None = None
+    sensitive_schema_markers: list[str] | None = None
+
+
+class PoliciesConfig(BaseModel):
+    schema_required: SchemaRequiredPolicyConfig = Field(
+        default_factory=SchemaRequiredPolicyConfig
+    )
+    sensitive_required: SensitiveRequiredPolicyConfig = Field(
+        default_factory=SensitiveRequiredPolicyConfig
+    )
+
+
+class ToolElicitFieldConfig(BaseModel):
+    type: str = "string"
+    description: str | None = None
+
+
+class ToolElicitConfig(BaseModel):
+    message: str | None = None
+    fields: dict[str, ToolElicitFieldConfig] = Field(default_factory=dict)
+
+
+class ToolAmbiguityConfig(BaseModel):
+    query_min_length: int | None = None
+    generic_terms: list[str] = Field(default_factory=list)
+
+
+class ToolConfirmConfig(BaseModel):
+    always: bool = False
+
+
+class ToolPolicyConfig(BaseModel):
+    required: list[str] = Field(default_factory=list)
+    ambiguous_if: ToolAmbiguityConfig | None = None
+    confirm_if: ToolConfirmConfig | None = None
+    elicit: ToolElicitConfig | None = None
 
 
 class AppConfig(BaseModel):
     upstream: UpstreamConfig
     proxy: ProxyConfig = Field(default_factory=ProxyConfig)
     elicitation: ElicitationConfig = Field(default_factory=ElicitationConfig)
+    policies: PoliciesConfig = Field(default_factory=PoliciesConfig)
+    tools: dict[str, ToolPolicyConfig] = Field(default_factory=dict)
 
 
 def load_config(path: str | Path) -> AppConfig:

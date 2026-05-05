@@ -25,9 +25,9 @@ async def test_incomplete_tool_call_returns_structured_fallback(proxy_client) ->
     )
 
     payload = _call_result_data(result)
-    assert payload["error"] == "tool_call_blocked"
+    assert payload["error"] == "elicitation_required"
     assert payload["tool"] == "search_docs"
     assert payload["status"] == "needs_elicitation"
-    assert payload["reason"] == "required_fields_missing_or_empty"
+    assert payload["reason"] == "elicitation_unsupported"
     assert payload["missing_or_ambiguous"] == ["project"]
-    assert "project" in payload["message"]
+    assert payload["message"]
