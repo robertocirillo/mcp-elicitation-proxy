@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -7,9 +8,12 @@ import mcp.types as mt
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools.base import ToolResult
 
-from .errors import StructuredToolErrorPayload, to_json_message
+from .errors import build_tool_call_blocked_payload, to_json_message
 from .pipeline import ElicitationPipeline
-from .policies.base import InspectionIssue, InspectionResult, InspectionStatus
+from .policies.base import InspectionResult, InspectionStatus
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -66,6 +70,11 @@ class ElicitationMiddleware(Middleware):
         try:
             tool = await fastmcp_context.fastmcp.get_tool(tool_name)
         except Exception:
+            logger.warning(
+                "Failed to resolve tool schema for tool %r; continuing without schema.",
+                tool_name,
+                exc_info=True,
+            )
             return None
 
         if tool is None:
@@ -81,37 +90,8 @@ class ElicitationMiddleware(Middleware):
         tool_name: str,
         result: InspectionResult,
     ) -> ToolResult:
-        payload = StructuredToolErrorPayload(
-            error="tool_call_blocked",
-            tool=tool_name,
-            status=result.status.value,
-            reason=self._reason_for(result),
-            missing_or_ambiguous=self._fields_for(result.issues),
-            message=self._message_for(result),
-        )
+        payload = build_tool_call_blocked_payload(tool_name, result)
         return ToolResult(
             content=to_json_message(payload),
             structured_content=payload.model_dump(),
         )
-
-    def _reason_for(self, result: InspectionResult) -> str:
-        if result.status == InspectionStatus.NEEDS_ELICITATION:
-            return "required_fields_missing_or_empty"
-        return result.status.value
-
-    def _fields_for(self, issues: list[InspectionIssue]) -> list[str]:
-        return [issue.field for issue in issues if issue.field is not None]
-
-    def _message_for(self, result: InspectionResult) -> str:
-        if result.status == InspectionStatus.NEEDS_ELICITATION:
-            fields = self._fields_for(result.issues)
-            if fields:
-                return (
-                    "Tool call requires additional input for: "
-                    + ", ".join(fields)
-                    + "."
-                )
-            return "Tool call requires additional input."
-
-        messages = [issue.message for issue in result.issues]
-        return " ".join(messages) if messages else "Tool call was blocked."

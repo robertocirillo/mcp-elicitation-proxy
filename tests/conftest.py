@@ -12,6 +12,7 @@ from mcp_elicitation_proxy.server import build_server
 
 
 UPSTREAM_TOOL_DESCRIPTION = "Search project documentation."
+UPSTREAM_TICKET_TOOL_DESCRIPTION = "Look up a support ticket."
 
 
 def _write_upstream_server(path: Path) -> None:
@@ -33,6 +34,35 @@ def _write_upstream_server(path: Path) -> None:
                         f"{project}: {query}",
                         f"{project}: exact-match",
                     ],
+                }
+
+
+            if __name__ == "__main__":
+                mcp.run()
+            '''
+        ).strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_ticket_upstream_server(path: Path) -> None:
+    path.write_text(
+        dedent(
+            '''
+            from fastmcp import FastMCP
+
+            mcp = FastMCP("UpstreamTickets")
+
+
+            @mcp.tool
+            def lookup_ticket(ticket_id: str, project: str) -> dict:
+                """Look up a support ticket."""
+                return {
+                    "ticket_id": ticket_id,
+                    "project": project,
+                    "status": "open",
+                    "summary": f"{project}: {ticket_id}",
                 }
 
 
@@ -94,4 +124,30 @@ def proxy_server(app_config: AppConfig):
 @pytest.fixture
 async def proxy_client(proxy_server):
     async with Client(proxy_server) as client:
+        yield client
+
+
+@pytest.fixture
+def ticket_upstream_server_script(tmp_path: Path) -> Path:
+    script_path = tmp_path / "ticket_upstream_server.py"
+    _write_ticket_upstream_server(script_path)
+    return script_path
+
+
+@pytest.fixture
+def ticket_app_config(ticket_upstream_server_script: Path) -> AppConfig:
+    return AppConfig(
+        upstream=UpstreamConfig(url=str(ticket_upstream_server_script)),
+        proxy=ProxyConfig(name="test-ticket-elicitation-proxy"),
+    )
+
+
+@pytest.fixture
+def ticket_proxy_server(ticket_app_config: AppConfig):
+    return build_server(ticket_app_config)
+
+
+@pytest.fixture
+async def ticket_proxy_client(ticket_proxy_server):
+    async with Client(ticket_proxy_server) as client:
         yield client
