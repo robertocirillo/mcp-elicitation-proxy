@@ -20,8 +20,8 @@ policies:
 tools:
   echo:
     elicit:
-      message: "Per completare il test del proxy, inserisci il messaggio da inviare al tool echo."
+      message: "To complete the proxy test, provide the message to send to the echo tool."
       fields:
         message:
           type: "string"
-          description: "Testo che il tool echo deve ripetere nella risposta."
+          description: "Text that the echo tool should repeat in its response."

@@ -249,7 +249,10 @@ It uses `examples/manual-everything.config.yaml`, which configures a
 command-based upstream, an upstream environment variable, elicitation, and a
 custom elicitation message for the upstream `echo` tool.
 
-Prerequisites:
+Prerequisites and optional local checks:
+
+You need `uv` and Node/npm/npx available locally. The test and lint commands
+below are optional local checkout checks before running the manual test.
 
 ```bash
 uv run pytest -q
@@ -298,13 +301,13 @@ Call `echo` without `message`. The proxy should dynamically discover that
 With `examples/manual-everything.config.yaml`, the expected custom message is:
 
 ```text
-Per completare il test del proxy, inserisci il messaggio da inviare al tool echo.
+To complete the proxy test, provide the message to send to the echo tool.
 ```
 
 The request schema should contain the configured `message` field description:
 
 ```text
-Testo che il tool echo deve ripetere nella risposta.
+Text that the echo tool should repeat in its response.
 ```
 
 Inspector may show the elicitation request inline in the tool-call flow rather
@@ -334,11 +337,11 @@ policies:
 tools:
   echo:
     elicit:
-      message: "Questo messaggio NON dovrebbe apparire quando message è trattato come sensibile."
+      message: "This message should NOT appear when message is treated as sensitive."
       fields:
         message:
           type: "string"
-          description: "Questo campo è stato marcato come sensibile per il test."
+          description: "This field is marked as sensitive for the manual test."
 ```
 
 Calling `echo` without `message` should not show an elicitation request. The
