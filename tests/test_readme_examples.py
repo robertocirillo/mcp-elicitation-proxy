@@ -43,10 +43,10 @@ def test_readme_config_example_matches_current_config_models(tmp_path: Path) -> 
     search_docs = config.tools["search_docs"]
     assert search_docs.required == ["query", "project"]
     assert search_docs.elicit is not None
-    assert search_docs.elicit.message == "La ricerca è ambigua. Specifica query e progetto."
+    assert search_docs.elicit.message == "Provide the missing search details."
     assert (
         search_docs.elicit.fields["project"].description
-        == "Progetto o scope in cui cercare"
+        == "Project or scope to search."
     )
 
     config_path = tmp_path / "config.yaml"

@@ -13,6 +13,9 @@
 - Sensitive required field guard that blocks elicitation for likely secrets.
 - YAML configuration for upstream, proxy, elicitation, and policies.
 - End-to-end and payload stability tests.
+- Manual MCP Inspector smoke test documentation.
+- Example config for the official `server-everything` reference server.
+- MIT license and public release contribution/security notes.
 
 ### Not included
 
@@ -24,5 +27,4 @@
 
 ### Notes
 
-- This is an internal/preliminary release baseline.
-- No package license is declared yet; choose one before publishing outside internal channels.
+- This is the first public-ready release baseline.
