@@ -1,0 +1,27 @@
+proxy:
+  name: "mcp-elicitation-proxy-manual-everything"
+
+upstream:
+  command: "npx"
+  args:
+    - -y
+    - "@modelcontextprotocol/server-everything"
+  env:
+    MCP_ELICITATION_PROXY_MANUAL_TEST: "env-ok"
+
+elicitation:
+  enabled: true
+  fallback_on_unsupported: "structured_error"
+
+policies:
+  sensitive_required:
+    enabled: true
+
+tools:
+  echo:
+    elicit:
+      message: "To complete the proxy test, provide the message to send to the echo tool."
+      fields:
+        message:
+          type: "string"
+          description: "Text that the echo tool should repeat in its response."
