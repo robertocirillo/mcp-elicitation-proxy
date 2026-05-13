@@ -89,6 +89,37 @@ uv run mcp-elicitation-proxy --config config.yaml
 
 You can also provide the config path via `MCP_ELICITATION_PROXY_CONFIG`.
 
+## MCP Client Configuration
+
+When configuring an MCP client, use `mcp-elicitation-proxy` as the package and
+CLI command. The local MCP client server alias can be shorter; the recommended
+alias is `elicitation-proxy`.
+
+```json
+{
+  "mcpServers": {
+    "elicitation-proxy": {
+      "command": "uvx",
+      "args": [
+        "mcp-elicitation-proxy",
+        "--config",
+        "/path/to/config.yaml"
+      ]
+    }
+  }
+}
+```
+
+In this example, `elicitation-proxy` is only the client-local server alias.
+`mcp-elicitation-proxy` remains the PyPI package name and CLI command. These
+names do not need to match. If desired, the proxy's own MCP server name can also
+be set separately in YAML:
+
+```yaml
+proxy:
+  name: "elicitation-proxy"
+```
+
 ## Discovery Invariants
 
 - Upstream tools remain visible in native `tools/list`.
