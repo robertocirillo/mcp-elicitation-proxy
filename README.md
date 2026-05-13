@@ -233,6 +233,183 @@ uv run mcp-elicitation-proxy --config config.yaml
 
 You can also provide the config path via `MCP_ELICITATION_PROXY_CONFIG`.
 
+### Manual functional test with MCP Inspector and server-everything
+
+This manual test validates `mcp-elicitation-proxy` with the official MCP
+Inspector as the client and the official reference `server-everything` package
+as the upstream server:
+
+```text
+MCP Inspector
+  -> mcp-elicitation-proxy
+  -> npx -y @modelcontextprotocol/server-everything
+```
+
+It uses `examples/manual-everything.config.yaml`, which configures a
+command-based upstream, an upstream environment variable, elicitation, and a
+custom elicitation message for the upstream `echo` tool.
+
+Prerequisites:
+
+```bash
+uv run pytest -q
+uv run ruff check .
+node --version
+npx --version
+```
+
+Start the manual test through Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector -- uv run mcp-elicitation-proxy --config examples/manual-everything.config.yaml
+```
+
+The `--` separator keeps Inspector arguments separate from proxy arguments. If
+it is omitted, `--config` may be interpreted by Inspector instead of by
+`mcp-elicitation-proxy`.
+
+After Inspector connects, the upstream tools exposed by `server-everything`
+should be visible through the proxy. Expected discovery checks:
+
+- `echo` is present;
+- `call_upstream_tool` is absent;
+- names are not prefixed, so tools such as `upstream_echo` or `upstream_add`
+  should not appear.
+
+These checks validate that upstream discovery stays delegated to FastMCP
+`create_proxy(...)` and is not replaced by a generic forwarding tool.
+
+Call `echo` with complete input:
+
+```json
+{
+  "message": "hello from mcp-elicitation-proxy v0.1.0"
+}
+```
+
+The expected result is equivalent to:
+
+```text
+Echo: "hello from mcp-elicitation-proxy v0.1.0"
+```
+
+Call `echo` without `message`. The proxy should dynamically discover that
+`message` is required by the upstream schema and send an elicitation request.
+With `examples/manual-everything.config.yaml`, the expected custom message is:
+
+```text
+Per completare il test del proxy, inserisci il messaggio da inviare al tool echo.
+```
+
+The request schema should contain the configured `message` field description:
+
+```text
+Testo che il tool echo deve ripetere nella risposta.
+```
+
+Inspector may show the elicitation request inline in the tool-call flow rather
+than automatically switching to a dedicated Elicitation tab. If the elicited
+value is:
+
+```text
+completed through elicitation
+```
+
+the final result should be equivalent to:
+
+```text
+Echo: completed through elicitation
+```
+
+To test the sensitive required-field guard, temporarily mark `message` as
+sensitive in the config:
+
+```yaml
+policies:
+  sensitive_required:
+    enabled: true
+    sensitive_name_markers:
+      - message
+
+tools:
+  echo:
+    elicit:
+      message: "Questo messaggio NON dovrebbe apparire quando message è trattato come sensibile."
+      fields:
+        message:
+          type: "string"
+          description: "Questo campo è stato marcato come sensibile per il test."
+```
+
+Calling `echo` without `message` should not show an elicitation request. The
+expected structured result is:
+
+```json
+{
+  "error": "tool_call_blocked",
+  "tool": "echo",
+  "status": "reject",
+  "reason": "sensitive_required_field",
+  "missing_or_ambiguous": [
+    "message"
+  ],
+  "message": "Tool call blocked because form-mode elicitation cannot request sensitive required field 'message'."
+}
+```
+
+The same guard must still allow explicit complete input:
+
+```json
+{
+  "message": "sensitive guard allows explicit complete input"
+}
+```
+
+Expected result:
+
+```text
+Echo: sensitive guard allows explicit complete input
+```
+
+To test the disabled-elicitation fallback, temporarily set:
+
+```yaml
+elicitation:
+  enabled: false
+  fallback_on_unsupported: "structured_error"
+```
+
+Calling `echo` without `message` should return:
+
+```json
+{
+  "error": "elicitation_required",
+  "tool": "echo",
+  "status": "needs_elicitation",
+  "reason": "elicitation_disabled",
+  "missing_or_ambiguous": [
+    "message"
+  ],
+  "message": "Input incompleto. Richiama il tool specificando i campi mancanti."
+}
+```
+
+`examples/manual-everything.config.yaml` also passes an environment variable to
+the upstream process:
+
+```yaml
+upstream:
+  env:
+    MCP_ELICITATION_PROXY_MANUAL_TEST: "env-ok"
+```
+
+In the manual test, use the environment or print-env tool exposed by
+`server-everything` to verify that the upstream process can see:
+
+```json
+"MCP_ELICITATION_PROXY_MANUAL_TEST": "env-ok"
+```
+
 ## First slice milestone status
 
 The first slice is complete for:
