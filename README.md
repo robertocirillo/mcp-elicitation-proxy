@@ -10,7 +10,17 @@ The core architectural rule is strict: upstream discovery stays native. The
 proxy must preserve upstream `tools/list` output instead of replacing it with a
 synthetic wrapper such as `call_upstream_tool`.
 
-## Setup
+## Install
+
+Run directly with `uvx`:
+
+```bash
+uvx mcp-elicitation-proxy --config config.yaml
+```
+
+For development from a local checkout, use the development setup steps below.
+
+## Development Setup
 
 ```bash
 uv sync
