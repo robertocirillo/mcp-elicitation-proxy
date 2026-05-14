@@ -1,5 +1,7 @@
 # mcp-elicitation-proxy
 
+A transparent MCP proxy that adds elicitation for missing required tool arguments while preserving upstream tool discovery and schemas.
+
 `mcp-elicitation-proxy` is a standalone Python MCP proxy built on FastMCP. It
 preserves native upstream tool discovery while adding tool-call middleware for
 required-field elicitation and sensitive required-field blocking.
@@ -122,10 +124,10 @@ proxy:
 
 ## Discovery Invariants
 
-- Upstream tools remain visible in native `tools/list`.
-- The proxy does not register a generic `call_upstream_tool`.
-- Tool names are not prefixed with values such as `upstream_`.
-- Tool names, descriptions, and input schemas remain the upstream values unless
+* Upstream tools remain visible in native `tools/list`.
+* The proxy does not register a generic `call_upstream_tool`.
+* Tool names are not prefixed with values such as `upstream_`.
+* Tool names, descriptions, and input schemas remain the upstream values unless
   an explicit future discovery feature changes that contract.
 
 The upstream server is delegated to FastMCP native proxying via
@@ -168,15 +170,15 @@ sensitive-required blocking, and `upstream.env` propagation.
 
 Expected high-level checks:
 
-- `echo` is visible as an upstream tool;
-- `call_upstream_tool` is not present;
-- tool names are not prefixed with `upstream_`;
-- calling `echo` with a complete `message` is forwarded;
-- calling `echo` without `message` triggers elicitation;
-- configured elicitation copy from `examples/manual-everything.config.yaml` is
+* `echo` is visible as an upstream tool;
+* `call_upstream_tool` is not present;
+* tool names are not prefixed with `upstream_`;
+* calling `echo` with a complete `message` is forwarded;
+* calling `echo` without `message` triggers elicitation;
+* configured elicitation copy from `examples/manual-everything.config.yaml` is
   used;
-- marking a missing required field as sensitive blocks elicitation;
-- the configured environment variable is visible to the upstream environment
+* marking a missing required field as sensitive blocks elicitation;
+* the configured environment variable is visible to the upstream environment
   tool.
 
 See [docs/manual-inspector-test.md](docs/manual-inspector-test.md) for details.
