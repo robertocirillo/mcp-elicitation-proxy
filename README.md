@@ -1,5 +1,10 @@
 # mcp-elicitation-proxy
 
+[![PyPI version](https://img.shields.io/pypi/v/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
+[![License: MIT](https://img.shields.io/pypi/l/mcp-elicitation-proxy.svg)](https://github.com/robertocirillo/mcp-elicitation-proxy/blob/main/LICENSE)
+
+
 A transparent MCP proxy that adds elicitation for missing required tool arguments while preserving upstream tool discovery and schemas.
 
 `mcp-elicitation-proxy` is a standalone Python MCP proxy built on FastMCP. It
