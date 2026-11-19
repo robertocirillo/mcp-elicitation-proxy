@@ -1,6 +1,5 @@
 # mcp-elicitation-proxy
 
-[![PyPI version](https://shields.io)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![PyPI Downloads](https://pepy.tech)](https://pepy.tech)
 [![PyPI - Monthly Downloads](https://shields.io)](https://pypistats.org)
 
