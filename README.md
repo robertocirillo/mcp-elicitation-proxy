@@ -1,5 +1,10 @@
 # mcp-elicitation-proxy
 
+[![PyPI version](https://shields.io)](https://pypi.org/project/mcp-elicitation-proxy/)
+[![PyPI Downloads](https://pepy.tech)](https://pepy.tech)
+[![PyPI - Monthly Downloads](https://shields.io)](https://pypistats.org)
+
+
 [![PyPI version](https://img.shields.io/pypi/v/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![Python versions](https://img.shields.io/pypi/pyversions/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![License: MIT](https://img.shields.io/pypi/l/mcp-elicitation-proxy.svg)](https://github.com/robertocirillo/mcp-elicitation-proxy/blob/main/LICENSE)
