@@ -3,6 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![Python versions](https://img.shields.io/pypi/pyversions/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![License: MIT](https://img.shields.io/pypi/l/mcp-elicitation-proxy.svg)](https://github.com/robertocirillo/mcp-elicitation-proxy/blob/main/LICENSE)
+
 [![Elicitation Proxy MCP server](https://mcprush.com/badge/elicitation-proxy-mcp/card.svg)](https://mcprush.com/to/elicitation-proxy-mcp?ref=badge)
 
 A transparent MCP proxy that adds elicitation for missing required tool arguments while preserving upstream tool discovery and schemas.
