@@ -1,12 +1,12 @@
 # mcp-elicitation-proxy
 
-[![PyPI Downloads](https://pepy.tech)](https://pepy.tech)
-[![PyPI - Monthly Downloads](https://shields.io)](https://pypistats.org)
+
 
 
 [![PyPI version](https://img.shields.io/pypi/v/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![Python versions](https://img.shields.io/pypi/pyversions/mcp-elicitation-proxy.svg)](https://pypi.org/project/mcp-elicitation-proxy/)
 [![License: MIT](https://img.shields.io/pypi/l/mcp-elicitation-proxy.svg)](https://github.com/robertocirillo/mcp-elicitation-proxy/blob/main/LICENSE)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/mcp-elicitation-proxy?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/mcp-elicitation-proxy)
 
 [![Elicitation Proxy MCP server](https://mcprush.com/badge/elicitation-proxy-mcp/card.svg)](https://mcprush.com/to/elicitation-proxy-mcp?ref=badge)
 
